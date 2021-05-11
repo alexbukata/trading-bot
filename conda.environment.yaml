@@ -1,0 +1,7 @@
+name: trading-bot-env
+dependencies:
+  - numpy
+  - pandas
+  - xgboost
+  - matplotlib
+  - seaborn
