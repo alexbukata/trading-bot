@@ -1,7 +1,12 @@
 name: trading-bot-env
+channels:
+  - conda-forge
+  - defaults
 dependencies:
   - numpy
   - pandas
   - xgboost
   - matplotlib
   - seaborn
+  - jupyter-lab
+  - pytables
