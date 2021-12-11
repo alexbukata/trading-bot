@@ -7,10 +7,10 @@ client = Spot(base_url='https://testnet.binance.vision',
               secret='kiqw56MTpd74ARmVl6sX2yYSEZ51PRwx6378RgSRWvWDFMoQumbGohfmq7sEZzsh')
 
 
-def get_asset_amount(asset):
+def get_account_assets():
     b_account = client.account()
     b_balances = b_account['balances']
-    return float(next(b_balance['free'] for b_balance in b_balances if b_balance['asset'] == asset))
+    return {b_balance['asset']: float(b_balance['free']) for b_balance in b_balances}
 
 
 def get_candles():
@@ -18,6 +18,8 @@ def get_candles():
     klines = []
     for b_kline in b_klines:
         klines.append({
+            "timestamp_from": float(b_kline[0]),
+            "timestamp_to": float(b_kline[6]),
             "open": float(b_kline[1]),
             "high": float(b_kline[2]),
             "low": float(b_kline[3]),
@@ -42,6 +44,4 @@ def sell_asset(asset, amount):
 
 
 if __name__ == '__main__':
-    pass
-    # print(get_price('BTCUSDT'))
-    # buy_asset('BTCUSDT', 1-0.780146)
+    pprint(get_account_assets())
