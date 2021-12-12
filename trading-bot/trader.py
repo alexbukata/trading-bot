@@ -5,17 +5,6 @@ from backtesting import historical_iter
 import time
 
 
-class ExchangeClient:
-    def market_buy(self, usdt: float) -> (float, float):
-        pass
-
-    def market_sell(self, btc: float) -> (float, float):
-        pass
-
-    def market_price(self):
-        pass
-
-
 class ExchangeClientMock(ExchangeClient):
     def __init__(self):
         self.curr_price = -1
