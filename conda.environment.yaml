@@ -8,5 +8,9 @@ dependencies:
   - xgboost
   - matplotlib
   - seaborn
+  - plotly
   - jupyter-lab
   - pytables
+  # not in conda:
+  # - chart-studio
+  # - python-binance

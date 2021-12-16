@@ -1,24 +1,16 @@
+from typing import NamedTuple, List
+
 from models import Candle, Action
 from sma_strategy import SmaStrategy
-from backtesting import historical_iter
-from binance_api import ExchangeClient, OrderResult
+from binance_api import ExchangeClient, OrderResult, OrderFill
 
 
-# class ExchangeClientMock(ExchangeClient):
-#     def __init__(self):
-#         self.curr_price = -1
-#
-#     def update_price(self, new_price):
-#         self.curr_price = new_price
-#
-#     def market_buy(self, usdt: float) -> (float, float):
-#         return usdt / self.curr_price, usdt
-#
-#     def market_sell(self, btc: float) -> (float, float):
-#         return btc, btc * self.curr_price
-#
-#     def market_price(self):
-#         return self.curr_price
+class TradeResult(NamedTuple):
+    timestamp_millis: float
+    btc: float
+    usdt: float
+    commission: float
+    overall: float
 
 
 class Agent:
@@ -32,16 +24,17 @@ class Agent:
     @classmethod
     async def create(cls, client: ExchangeClient, btc, usdt, strategy: SmaStrategy):
         instance = cls(client, btc, usdt, strategy)
+        print(f"Init assets: {await client.account_assets()}")
         print(f"Init capital: {await instance.overall()} usdt")
         return instance
 
-    async def tick(self, candle: Candle) -> None:
+    async def tick(self, candle: Candle) -> TradeResult:
+        # print("================")
         strategy, action = self.strategy.tick(candle)
         self.strategy = strategy
-        if action == Action.NOTHING:
-            return
-        if action == Action.BUY and self.usdt >= 10:
-            order_result: OrderResult = await self.client.buy_asset("BTCUSDT", quoteAmount=10)
+        # print(f"Action: {action}")
+        if action == Action.BUY and self.usdt >= 100:
+            order_result: OrderResult = await self.client.buy_asset("BTCUSDT", quoteAmount=100)
             btc_bought = 0
             usdt_spent = 0
             usdt_commission = 0
@@ -52,8 +45,9 @@ class Agent:
                 self.orders.append((fill.qty, fill.price))
             self.btc = self.btc + btc_bought
             self.usdt = self.usdt - usdt_spent
-            print(f"bought {btc_bought} btc, spent {usdt_spent} usdt (commission={usdt_commission}). "
-                  f"btc={self.btc}, usdt={self.usdt}. Overall: {await self.overall()} usdt")
+            # print(f"bought {btc_bought} btc, spent {usdt_spent} usdt (commission={usdt_commission}). "
+            #       f"btc={self.btc}, usdt={self.usdt}. Overall: {await self.overall()} usdt")
+            return TradeResult(candle.timestamp_millis, btc_bought, -usdt_spent, usdt_commission, await self.overall())
         elif action == Action.SELL and len(self.orders) > 0:
             btc_bought_already = sum(map(lambda x: x[0], self.orders))
             order_result: OrderResult = await self.client.sell_asset("BTCUSDT", assetAmount=btc_bought_already)
@@ -67,26 +61,12 @@ class Agent:
             self.btc = self.btc - btc_spent
             self.usdt = self.usdt + usdt_bought
             self.orders = []
-            print(f"sell {btc_spent} btc, gain {usdt_bought} usdt. btc={self.btc}, usdt={self.usdt}. "
-                  f"Overall: {await self.overall()} usdt")
+            # print(f"sell {btc_spent} btc, gain {usdt_bought} usdt. btc={self.btc}, usdt={self.usdt}. "
+            #       f"Overall: {await self.overall()} usdt")
+            return TradeResult(candle.timestamp_millis, -btc_spent, usdt_bought, usdt_commission, await self.overall())
+        else:
+            return TradeResult(candle.timestamp_millis, 0, 0, 0, await self.overall())
 
     async def overall(self):
         price = await self.client.market_price("BTCUSDT")
         return self.btc * price + self.usdt
-
-
-if __name__ == '__main__':
-    historical = historical_iter()
-    init_candles = [next(historical)[1] for i in range(100)]
-    _, raw_candle = next(historical)
-    candle = Candle.from_series(raw_candle)
-    client = ExchangeClientMock()
-    client.update_price(candle.close)
-    agent = Agent(client, 1, 1000, init_strategy(init_candles))
-    agent.tick(candle)
-    for _, raw_candle in historical:
-        candle = Candle.from_series(raw_candle)
-        client.update_price(candle.close)
-        # print(candle)
-        agent.tick(candle)
-        # time.sleep(0.1)

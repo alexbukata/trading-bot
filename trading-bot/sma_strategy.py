@@ -57,6 +57,7 @@ class _Init(SmaStrategy):
         self.technicals.append(candle)
         sma14, sma28 = self.technicals.sma(14), self.technicals.sma(28)
         trend = _get_trend(sma14, sma28)
+        # print(f"Trend: {trend}")
         if trend == Trend.UPTREND:
             return _Hold(self.technicals, 0), Action.BUY
         if trend == Trend.DOWNTREND:
@@ -76,7 +77,7 @@ class _Hold(SmaStrategy):
         first_candle = self.technicals.candle_at(-self.wait_counter)
         sma14, sma28 = self.technicals.sma(14), self.technicals.sma(28)
         if first_candle.close + first_candle.close * 0.02 < self.technicals.candle_at(-1).close \
-                and sma14[-1] > sma28[-1]:
+                and sma14.iloc[-1] > sma28.iloc[-1]:
             return _Hold(self.technicals, 0), Action.BUY
         else:
             return _Init(self.technicals), Action.NOTHING
@@ -94,7 +95,7 @@ class _Release(SmaStrategy):
         first_candle = self.technicals.candle_at(-self.wait_counter)
         sma14, sma28 = self.technicals.sma(14), self.technicals.sma(28)
         if first_candle.close - first_candle.close * 0.02 > self.technicals.candle_at(-1).close \
-                and sma14[-1] < sma28[-1]:
+                and sma14.iloc[-1] < sma28.iloc[-1]:
             return _Release(self.technicals, 0), Action.SELL
         else:
             return _Init(self.technicals), Action.NOTHING

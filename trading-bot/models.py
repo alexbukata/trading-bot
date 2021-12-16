@@ -23,7 +23,7 @@ class Candle(NamedTuple):
     @classmethod
     def from_series(cls, raw_candle: pd.Series):
         return cls(
-            raw_candle["unixtimestamp"],
+            raw_candle["unixtimestamp_millis"],
             raw_candle["open"],
             raw_candle["high"],
             raw_candle["low"],
@@ -34,8 +34,8 @@ class Candle(NamedTuple):
 
     def to_series(self):
         return pd.Series(data={
-            "timestamp": pd.to_datetime(self.timestamp_millis, unit='ms'),
-            "unixtimestamp": self.timestamp_millis,
+            "datetime": pd.to_datetime(self.timestamp_millis, unit='ms'),
+            "unixtimestamp_millis": self.timestamp_millis,
             "open": self.open,
             "high": self.high,
             "low": self.low,
