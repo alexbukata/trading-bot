@@ -5,10 +5,6 @@ from models import Action, Candle
 import pandas as pd
 
 
-def init_strategy(candles) -> SmaStrategy:
-    return _Init(Technicals(pd.DataFrame(data=candles)))
-
-
 def _get_trend(sma14, sma28) -> Trend:
     # if sma14 cross below sma28 -> Trend.UPTREND
     # if sma14 cross above sma28 -> Trend.DOWNTREND
@@ -47,6 +43,10 @@ class Trend(Enum):
 class SmaStrategy:
     def tick(self, candle: Candle) -> (SmaStrategy, Action):
         pass
+
+    @classmethod
+    def init(cls, candles) -> SmaStrategy:
+        return _Init(Technicals(pd.DataFrame(data=candles)))
 
 
 class _Init(SmaStrategy):

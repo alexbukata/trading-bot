@@ -12,7 +12,7 @@ class Action(Enum):
 
 class Candle(NamedTuple):
     # timestamp_from: float
-    timestamp: float
+    timestamp_millis: float
     open: float
     high: float
     low: float
@@ -20,9 +20,9 @@ class Candle(NamedTuple):
     asset_volume: float
     quote_volume: float
 
-    @staticmethod
-    def from_series(raw_candle: pd.Series):
-        return Candle(
+    @classmethod
+    def from_series(cls, raw_candle: pd.Series):
+        return cls(
             raw_candle["unixtimestamp"],
             raw_candle["open"],
             raw_candle["high"],
@@ -34,8 +34,8 @@ class Candle(NamedTuple):
 
     def to_series(self):
         return pd.Series(data={
-            "timestamp": pd.to_datetime(self.timestamp, unit='s'),
-            "unixtimestamp": self.timestamp,
+            "timestamp": pd.to_datetime(self.timestamp_millis, unit='ms'),
+            "unixtimestamp": self.timestamp_millis,
             "open": self.open,
             "high": self.high,
             "low": self.low,
